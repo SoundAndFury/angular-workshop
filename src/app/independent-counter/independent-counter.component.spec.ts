@@ -1,8 +1,9 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { take, toArray } from 'rxjs/operators';
 
-import { click, expectText, findEl } from '../spec-helpers/element.spec-helper';
+import { qaElement, initSpecHelpers, IQAElement } from '../spec-helpers/qq.spec-helper';
 import { IndependentCounterComponent } from './independent-counter.component';
+import { detectChanges } from '../spec-helpers/stateful-element.spec-helper';
 
 const startCount = 123;
 const newCount = 456;
@@ -11,23 +12,36 @@ describe('IndependentCounterComponent', () => {
   let component: IndependentCounterComponent;
   let fixture: ComponentFixture<IndependentCounterComponent>;
 
+  let incrementButton: IQAElement;
+  let decrementButton: IQAElement;
+  let resetButton: IQAElement;
+  let resetInput: IQAElement;
+  let countElement: IQAElement;
+
   function expectCount(count: number) {
-    expectText(fixture, 'count', String(count));
+    countElement.expectText(String(count));
   }
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ IndependentCounterComponent ]
+      declarations: [IndependentCounterComponent]
     })
-    .compileComponents();
+      .compileComponents();
   }));
 
   beforeEach(() => {
     fixture = TestBed.createComponent(IndependentCounterComponent);
+    initSpecHelpers(fixture);
     component = fixture.componentInstance;
     component.startCount = startCount;
     component.ngOnChanges();
-    fixture.detectChanges();
+    detectChanges();
+
+    incrementButton = qaElement('increment-button');
+    decrementButton = qaElement('decrement-button');
+    resetButton = qaElement('reset-button');
+    resetInput = qaElement('reset-input');
+    countElement = qaElement('count');
   });
 
   it('shows the start count', () => {
@@ -35,32 +49,33 @@ describe('IndependentCounterComponent', () => {
   });
 
   it('increments the count', () => {
-    click(fixture, 'increment-button');
+    incrementButton.click();
     fixture.detectChanges();
     expectCount(startCount + 1);
   });
 
   it('decrements the count', () => {
-    click(fixture, 'decrement-button');
-    fixture.detectChanges();
+    decrementButton.click();
+    detectChanges();
     expectCount(startCount - 1);
   });
 
   it('resets the count', () => {
-    findEl(fixture, 'reset-input').nativeElement.value = String(newCount);
-    click(fixture, 'reset-button');
-    fixture.detectChanges();
+    resetInput.nativeElement.value = String(newCount);
+    resetButton.click();
+    detectChanges();
+    detectChanges();
     expectCount(newCount);
   });
 
   it('emits countChange events', async(() => {
     component.countChange.pipe(take(3), toArray()).subscribe((events) => {
-      expect(events).toEqual([ startCount + 1, startCount, newCount ]);
+      expect(events).toEqual([startCount + 1, startCount, newCount]);
     });
-    click(fixture, 'increment-button');
-    click(fixture, 'decrement-button');
-    findEl(fixture, 'reset-input').nativeElement.value  = String(newCount);
-    click(fixture, 'reset-button');
+    incrementButton.click();
+    decrementButton.click();
+    resetInput.nativeElement.value = String(newCount);
+    resetButton.click();
   }));
 
 });
